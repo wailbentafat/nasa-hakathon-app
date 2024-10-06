@@ -1,12 +1,13 @@
 # Simple Multiplayer FPS Game WebSocket Server
 
 ## Overview
-This project is a WebSocket server built with Go for a simple multiplayer first-person shooter (FPS) game. It supports real-time player movement, shooting mechanics, and damage handling, allowing for interactive gameplay.
+This project is a WebSocket server built with Go for a simple multiplayer first-person shooter (FPS) game. It supports real-time player movement, shooting mechanics, and damage handling, allowing for interactive gameplay and stor every user information and mouvemnt inside blckchain operateur 
 
 ## Key Features
 - Real-time player movement synchronization
 - Shooting mechanics with damage calculation
 - Efficient WebSocket communication
+- blackchian relatime mechanisme 
 
 ## Technologies Used
 - Go
