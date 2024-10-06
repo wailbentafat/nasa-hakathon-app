@@ -1,12 +1,17 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"github.com/gorilla/websocket"
+	"strconv"
 	"sync"
+	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 var Upgrade = websocket.Upgrader{
@@ -33,11 +38,57 @@ type Shoot struct {
 	damage   int `json:"damage"`
 }
 
+type Block struct {
+	Index     int    `json:"index"`
+	Timestamp string `json:"timestamp"`
+	Data      string `json:"data"`
+	PrevHash  string `json:"prev_hash"`
+	Hash      string `json:"hash"`
+}
+
+var Blockchain []Block
+
+var mu sync.Mutex
 var clients = make(map[int]*websocket.Conn)
-var mu sync.Mutex 
 
+func CalculateHash(block Block) string {
+	record := strconv.Itoa(block.Index) + block.Timestamp + block.Data + block.PrevHash
+	h := sha256.New()
+	h.Write([]byte(record))
+	hashed := h.Sum(nil)
+	return hex.EncodeToString(hashed)
+}
 
-func sra_damage(player *USER, damage int) ([]byte) {
+func GenerateBlock(oldBlock Block, data string) Block {
+	newBlock := Block{
+		Index:     oldBlock.Index + 1,
+		Timestamp: time.Now().String(),
+		Data:      data,
+		PrevHash:  oldBlock.Hash,
+		Hash:      "",
+	}
+	newBlock.Hash = CalculateHash(newBlock)
+	return newBlock
+}
+
+func AddBlock(newBlock Block) {
+	mu.Lock()
+	Blockchain = append(Blockchain, newBlock)
+	mu.Unlock()
+}
+
+func broadcastMessage(message []byte) {
+	mu.Lock()
+	defer mu.Unlock()
+	for _, conn := range clients {
+		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
+			log.Println("Error sending message:", err)
+			conn.Close()
+		}
+	}
+}
+
+func sra_damage(player *USER, damage int) []byte {
 	player.health -= damage
 	var message []byte
 	if player.health <= 0 {
@@ -47,28 +98,25 @@ func sra_damage(player *USER, damage int) ([]byte) {
 		message = []byte(fmt.Sprintf("User %d took %d damage", player.user_id, damage))
 	}
 	log.Printf("User %d took %d damage", player.user_id, damage)
+
+	data := fmt.Sprintf("User %d took %d damage", player.user_id, damage)
+	newBlock := GenerateBlock(Blockchain[len(Blockchain)-1], data)
+	AddBlock(newBlock)
+
 	return message
 }
 
-
-func sra_move(player *USER, move Move) ([]byte) {
+func sra_move(player *USER, move Move) []byte {
 	var message []byte
 	log.Printf("User %d moved to %d, %d", player.user_id, move.X, move.Y)
 	message = []byte(fmt.Sprintf("User %d moved to %d, %d", player.user_id, move.X, move.Y))
+
+	data := fmt.Sprintf("User %d moved to %d, %d", player.user_id, move.X, move.Y)
+	newBlock := GenerateBlock(Blockchain[len(Blockchain)-1], data)
+	AddBlock(newBlock)
+
 	return message
 }
-
-func broadcastMessage(message []byte) {
-	mu.Lock()
-	defer mu.Unlock()
-	for _, conn := range clients {
-		if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
-			log.Println("Error sending message:", err)
-			conn.Close() 
-		}
-	}
-}
-
 
 func wshandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := Upgrade.Upgrade(w, r, nil)
@@ -83,12 +131,10 @@ func wshandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	mu.Lock()
 	clients[user.user_id] = conn
 	mu.Unlock()
 
-	
 	initialMessage := []byte("Hello, World!")
 	if err := conn.WriteMessage(websocket.TextMessage, initialMessage); err != nil {
 		log.Println("Error writing message:", err)
@@ -135,10 +181,17 @@ func wshandler(w http.ResponseWriter, r *http.Request) {
 			clients[user.user_id] = conn
 			mu.Unlock()
 		}
+
+		chainBytes, _ := json.Marshal(Blockchain)
+		broadcastMessage(chainBytes)
 	}
 }
 
 func main() {
+	genesisBlock := Block{Index: 0, Timestamp: time.Now().String(), Data: "Genesis Block", PrevHash: "", Hash: ""}
+	genesisBlock.Hash = CalculateHash(genesisBlock)
+	Blockchain = append(Blockchain, genesisBlock)
+
 	http.HandleFunc("/ws", wshandler)
 	log.Println("WebSocket server started on :8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
