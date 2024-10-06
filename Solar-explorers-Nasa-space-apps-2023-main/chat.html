@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="This is a website that showcases a tool to answer questions about space, NASA, or physics.">
+    <meta name="keywords" content="space, NASA, physics, chatbot, celestial voyages">
+    <meta name="author" content="Sufyaan">
+    <link rel="icon" href="./img/logo1.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet"/>
+    
+    <title>Spacebot | Celestial Voyages</title>
+
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body Styling */
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            line-height: 1.6;
+            background-color: #f4f4f4; /* Original background color */
+            padding: 20px;
+        }
+
+        /* Header Styling */
+        .header {
+            background-color: #333; /* Original header background color */
+            color: white;
+            padding: 10px 20px;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .header .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header ul {
+            list-style: none;
+            display: flex;
+            gap: 20px; /* Space between the list items */
+        }
+
+        .header a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .header a:hover {
+            color: #f4f4f4;
+        }
+
+        /* Section Styling */
+        section {
+            margin-top: 80px;
+            padding: 20px;
+            background-color: white; /* Keep the white background for sections */
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Form Area Styling */
+        textarea {
+            font-size: 18px;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4caf50; /* Button color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #45a049; /* Button hover color */
+        }
+
+        /* Result Area Styling */
+        #result {
+            margin-top: 20px;
+        }
+
+        #result h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        #result p {
+            font-size: 18px;
+            color: #333;
+        }
+
+        #resultImageContainer {
+            margin-top: 20px;
+        }
+
+        #resultImage {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            padding: 80px; /* Adjusted padding */
+            text-align: center;
+            background-color: transparent; /* Ensure hero section has no background */
+        }
+
+        .hero-container {
+            margin: 0 auto;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #333; /* Footer color */
+            color: white;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="nav wrapper">
+            <a href="./" class="logo">Celestial Voyages</a>
+            <ul class="social-links">
+                <li><a href="./index.html" target="_blank">Home</a></li>
+                <li><a href="./galaxy.html" target="_blank">Galaxy</a></li>
+                <li><a href="./statistics.html" target="_blank">Statistics</a></li>
+                <li><a href="./chat.html" target="_blank">Spacebot</a></li>
+                <li><a href="http://localhost:8000/" target="_blank">Space Game</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main class="hero-section">
+        <section class="wrapper hero-container">
+            <h1 class="animate__animated animate__fadeInLeft">Welcome to Your Solar System Adventure!</h1>
+            <p class="animate__animated animate__fadeInLeft animation_delay">
+                We've crafted a tool to ignite your curiosity about the wonders of our solar system. Imagine being a space tourist, charting your course through the cosmos, exploring planets, and uncovering the mysteries of the great beyond.
+            </p>
+        </section>
+    </main>
+
+    <section>
+        <div>
+            <h1>Spacebot</h1>
+            <label for="userInput">Enter Text:</label>
+            <textarea id="userInput" rows="4" cols="50"></textarea>
+        </div>
+        <button id="processButton">Process Text</button>
+        <div id="result">
+            <h2>Result:</h2>
+            <p id="resultText"></p>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 Celestial Voyages. All rights reserved.</p>
+        <div class="icons">
+            <a class="bryan-santos">wailbentafat</a>
+        </div>
+    </footer>
+
+    
+    <script>
+        function processText() {
+            const userInput = document.getElementById('userInput').value;
+            let prompt = "I want you to answer questions about space, NASA, or physics, and answer people’s questions like you are a real human. " + userInput;
+
+            const API_KEY = 'AIzaSyAMVtAhR7QZl3e7BOY0JDQbiSqNsEGnExg';
+
+            fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    prompt: prompt,
+                    maxTokens: 100,
+                    temperature: 0.7
+                }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.generations && data.generations.length > 0) {
+                    document.getElementById('resultText').innerText = data.generations[0].text || "Sorry, I didn't get that.";
+                } else {
+                    document.getElementById('resultText').innerText = "No valid response from the API.";
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('resultText').innerText = "An error occurred. Please check the console for details.";
+            });
+        }
+        
+
+        document.getElementById('processButton').addEventListener('click', processText);
+    </script>
+</body>
+</html>
